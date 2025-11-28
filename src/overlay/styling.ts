@@ -1,6 +1,10 @@
 import { DiagramLine, DiagramPolygon } from "./model";
+import { logDebug } from "../core/logger";
+
+const SCOPE = "styling";
 
 export function getPolygonStyle(poly: DiagramPolygon): any {
+    logDebug(SCOPE, "polygon", { type: poly.type, name: poly.name, points: poly.path.length });
     switch (poly.type) {
         case "runway":
             return {
@@ -33,6 +37,7 @@ export function getPolygonStyle(poly: DiagramPolygon): any {
 }
 
 export function getLineStyle(line: DiagramLine): any {
+    logDebug(SCOPE, "line", { type: line.type, name: line.name, points: line.path.length });
     switch (line.type) {
         case "taxiline":
             return {

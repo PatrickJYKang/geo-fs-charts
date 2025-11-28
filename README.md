@@ -124,7 +124,3 @@ See `dist/geofs-nav-zoom-only.user.js` (or the code in this repo’s README).
 
 - X-Plane Gateway data is extremely detailed and well-suited to a taxi-chart overlay, but you should review their licensing if you intend to redistribute derived material.
 - GeoFS’s OSM tiles appear to stop at zoom 13; deeper zoom relies on Leaflet upscaling existing tiles, so visual sharpness will not improve past that level. The overlay, however, remains fully vector and will look crisp at any zoom level.
-
----
-
-If you want, the next logical step would be wiring in a real ICAO detection from GeoFS (nearest airport by position), but I’ve stopped here as requested so you can hand it to another developer cleanly.

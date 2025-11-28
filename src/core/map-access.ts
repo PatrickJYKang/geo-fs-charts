@@ -1,3 +1,7 @@
+import { logDebug, logWarn } from "./logger";
+
+const SCOPE = "map-access";
+
 export interface LeafletMap {
     options: any;
     _layers: Record<string, any>;
@@ -30,13 +34,23 @@ export function findNavPanelMap(): LeafletMap | null {
             try {
                 hunt(obj[key]);
                 if (result) return;
-            } catch (_) {}
+            } catch (err) {
+                logWarn(SCOPE, "hunt:error", { key, err });
+            }
         }
     }
 
     try {
         hunt(window);
-    } catch (_) {}
+    } catch (err) {
+        logWarn(SCOPE, "findNavPanelMap:globalError", err);
+    }
+
+    if (result) {
+        logDebug(SCOPE, "findNavPanelMap:found", result);
+    } else {
+        logDebug(SCOPE, "findNavPanelMap:not-found");
+    }
 
     return result;
 }

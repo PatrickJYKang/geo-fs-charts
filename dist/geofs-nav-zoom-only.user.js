@@ -13,11 +13,18 @@
     'use strict';
 
     const TARGET_MAX_ZOOM = 18;
+    const PREFIX = '[GeoFSZoom]';
 
     let cachedMap = null;
     let alreadyLoggedFound = false;
 
-    console.log("[GeoFSZoom] userscript loaded");
+    function log(scope, message, payload) {
+        const parts = [`${PREFIX}[${scope}]`, message];
+        if (payload) parts.push(payload);
+        console.debug(...parts);
+    }
+
+    log('main', 'userscript loaded');
 
     function findLeafletMapOnce() {
         const seen = new Set();
@@ -45,19 +52,21 @@
                         hunt(val);
                         if (found) return;
                     }
-                } catch (e) {}
+                } catch (e) {
+                    log('hunt', 'error walking key', { key, error: e });
+                }
             }
         }
 
         try {
             hunt(window);
         } catch (e) {
-            console.log("[GeoFSZoom] Error while hunting map:", e);
+            log('hunt', 'global error', e);
         }
 
         if (found && !alreadyLoggedFound) {
             alreadyLoggedFound = true;
-            console.log("[GeoFSZoom] Leaflet map found:", found);
+            log('hunt', 'Leaflet map found', found);
         }
 
         return found;
@@ -65,17 +74,20 @@
 
     function tweakMap(map) {
         if (!map || !map.options) {
+            log('tweak', 'missing map or options');
             return;
         }
 
         if (map.options.maxZoom && map.options.maxZoom >= TARGET_MAX_ZOOM &&
             (map._layersMaxZoom || 0) >= TARGET_MAX_ZOOM) {
+            log('tweak', 'already at target zoom');
             return;
         }
 
-        console.log("[GeoFSZoom] Adjusting map zoom limits. Before:",
-            "options.maxZoom =", map.options.maxZoom,
-            " _layersMaxZoom =", map._layersMaxZoom);
+        log('tweak', 'adjusting map zoom limits (before)', {
+            optionsMaxZoom: map.options.maxZoom,
+            layersMaxZoom: map._layersMaxZoom
+        });
 
         map.options.maxZoom = TARGET_MAX_ZOOM;
         if (typeof map.setMaxZoom === "function") {
@@ -91,6 +103,7 @@
                 const layer = map._layers[id];
                 if (layer && layer.options && layer.options.maxZoom != null && layer.options.maxZoom < TARGET_MAX_ZOOM) {
                     layer.options.maxZoom = TARGET_MAX_ZOOM;
+                    log('tweak', 'layer patched', { id });
                 }
             });
         }
@@ -103,25 +116,30 @@
                 const zoomIn = container.querySelector(".leaflet-control-zoom-in");
                 if (zoomIn) {
                     zoomIn.classList.remove("leaflet-disabled");
+                    log('tweak', 'zoom control re-enabled');
                 }
             }
         }
 
-        console.log("[GeoFSZoom] Zoom limits after:",
-            "options.maxZoom =", map.options.maxZoom,
-            " _layersMaxZoom =", map._layersMaxZoom);
+        log('tweak', 'adjusting map zoom limits (after)', {
+            optionsMaxZoom: map.options.maxZoom,
+            layersMaxZoom: map._layersMaxZoom
+        });
     }
 
     const interval = setInterval(() => {
         if (!window.L) {
+            log('interval', 'Leaflet not yet available');
             return;
         }
 
         if (!cachedMap) {
             cachedMap = findLeafletMapOnce();
+            log('interval', 'map lookup', { found: Boolean(cachedMap) });
         }
 
         if (!cachedMap) {
+            log('interval', 'map still missing');
             return;
         }
 
